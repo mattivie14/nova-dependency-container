@@ -73,14 +73,28 @@
 						return;
 					}
 
-					if(dependency.hasOwnProperty('value') && this.dependencyValues[dependency.field] !== dependency.value) {
-						this.dependenciesSatisfied = false;
-						return;
+					if (dependency.hasOwnProperty('value') && Array.isArray(dependency.value)) {
+						if(dependency.hasOwnProperty('value') && !dependency.value.includes(this.dependencyValues[dependency.field])) {
+							this.dependenciesSatisfied = false;
+							return;
+						}
+					} else {
+						if(dependency.hasOwnProperty('value') && this.dependencyValues[dependency.field] !== dependency.value) {
+							this.dependenciesSatisfied = false;
+							return;
+						}
 					}
-					
-					if(dependency.hasOwnProperty('falseValue') && this.dependencyValues[dependency.field] == dependency.falseValue) {
-						this.dependenciesSatisfied = false;
-						return;
+
+					if (dependency.hasOwnProperty('falseValue') && Array.isArray(dependency.falseValue)) {
+						if(dependency.hasOwnProperty('falseValue') && dependency.falseValue.includes(this.dependencyValues[dependency.field])) {
+							this.dependenciesSatisfied = false;
+							return;
+						}
+					} else {
+						if(dependency.hasOwnProperty('falseValue') && this.dependencyValues[dependency.field] == dependency.falseValue) {
+							this.dependenciesSatisfied = false;
+							return;
+						}
 					}
 				}
 
@@ -89,8 +103,8 @@
 
 			fill(formData) {
 				if(this.dependenciesSatisfied) {
-					_.each(this.field.fields, field => {
-						field.fill(formData)
+					this.$children.forEach(f => {
+						f.fill(formData)
 					})
 				}
 			}
