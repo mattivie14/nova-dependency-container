@@ -47,7 +47,7 @@ class NovaDependencyContainer extends Field
             'dependencies' => array_merge($this->meta['dependencies'], [['field' => $field, 'value' => $value]])
         ]);
     }
-    
+
     /**
      * Adds a dependency for a field being NOT equal to a value
      *
@@ -88,13 +88,33 @@ class NovaDependencyContainer extends Field
                 $this->meta['dependencies'][$index]['satisfied'] = true;
             }
 
-            if(array_key_exists('value', $dependency) && $dependency['value'] == $resource->{$dependency['field']}) {
-                $this->meta['dependencies'][$index]['satisfied'] = true;
+            if (array_key_exists('value', $dependency) && is_iterable($resource->{$dependency['field']})) {
+                $filtered = $resource->{$dependency['field']}->filter(function ($value, $key) use (&$dependency) {
+                    return $value->id == $dependency['value'];
+                });
+                if ($filtered->isNotEmpty()) {
+                    $this->meta['dependencies'][$index]['satisfied'] = true;
+                }
+            } else {
+                if (array_key_exists('value', $dependency) && $dependency['value'] == $resource->{$dependency['field']}) {
+                    $this->meta['dependencies'][$index]['satisfied'] = true;
+                }
             }
+
+            if (array_key_exists('falseValue', $dependency) && is_iterable($resource->{$dependency['field']})) {
+                $filtered = $resource->{$dependency['field']}->filter(function ($value, $key) use (&$dependency) {
+                    return $value->id !== $dependency['falseValue'];
+                });
+                if ($filtered->isEmpty()) {
+                    $this->meta['dependencies'][$index]['satisfied'] = true;
+                }
+            } else {
+                if(array_key_exists('falseValue', $dependency) && $dependency['falseValue'] !== $resource->{$dependency['field']}) {
+                    $this->meta['dependencies'][$index]['satisfied'] = true;
+                }
+            }
+
             
-            if(array_key_exists('falseValue', $dependency) && $dependency['falseValue'] !== $resource->{$dependency['field']}) {
-                $this->meta['dependencies'][$index]['satisfied'] = true;
-            }
         }
     }
 
